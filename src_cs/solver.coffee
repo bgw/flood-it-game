@@ -430,7 +430,7 @@ solver.solveBoard = (startBoard=@getRandomBoard(), {admissible, multiplier,
 _.bindAll(solver)
 
 # Run some tests if we're run from the command line
-if not module.parent?
+if module is require.main
     # Generate our test board
     startBoard = solver.getRandomBoard 10
     
