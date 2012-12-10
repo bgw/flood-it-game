@@ -1,0 +1,18 @@
+{
+    "name": "floodit",
+    "version": "0.0.1-alpha",
+    "description": "An HTML5 'flood-it' game with a solver",
+    "author": "Benjamin Woodruff <benjaminwoodruff@ufl.edu>",
+    "dependencies": {
+        "underscore": ">= 1.4.3"
+    },
+    "devDependencies": {
+        "coffee-script": ">= 1.4.0",
+        "coffeelint": ">= 0.5.4",
+        "browserify": ">= 1.16.6",
+        "raphael-browserify": ">= 2.1.0",
+        "jasmine-node": ">= 1.0.28"
+    },
+    "browserify": "game-browser.js",
+    "license": "GPLv3"
+}
