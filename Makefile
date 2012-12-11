@@ -12,7 +12,6 @@ SRC_STATIC = src_static
 BIN = bin
 
 # Environment variables
-export NODE_PATH = .:$(SRC_CS)
 export COFFEELINT_CONFIG = coffeelint.json
 
 # Recursive wildcard function

@@ -3,7 +3,7 @@
 # spec should call us with a context function like `beforeEach`:
 # `require("./jasmine-underscore.coffee")(beforeEach)`
 
-_ = require "underscore-extra.coffee"
+_ = require "../src_cs/underscore-extra.coffee"
 
 nameTransform = (functionName) ->
     return "us" + functionName[0].toUpperCase() + functionName[1..]

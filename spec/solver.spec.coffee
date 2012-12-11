@@ -1,5 +1,5 @@
-solver = require "solver.coffee"
-_ = require "underscore-extra.coffee"
+solver = require "../src_cs/solver.coffee"
+_ = require "../src_cs/underscore-extra.coffee"
 require("./jasmine-underscore.coffee")(beforeEach)
 
 describe "Board size", ->
