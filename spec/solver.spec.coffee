@@ -34,17 +34,19 @@ describe "Converting a board to a human-readable string", ->
         expect(newlines.length).toBe boardSize-1
 
 describe "Parsing a board from a string", ->
-    board = new Uint8Array [
+    board = [
         0, 1, 2,
         3, 4, 5,
         6, 7, 8
     ]
     it "should parse a board string correctly", ->
-        expect(solver.parseBoard "012345678").toEqual board
+        expect(_.toArray solver.parseBoard "012345678").toEqual board
     it "should strip out bad characters", ->
-        expect(solver.parseBoard "--0*1kbc\n23 456i7_8 ").toEqual board
+        expect(_.toArray solver.parseBoard "--0*1kbc\n23 456i7_8 ")
+            .toEqual board
     it "should be able to parse the result of getBoardString", ->
-        expect(solver.parseBoard(solver.getBoardString board)).toEqual board
+        expect(_.toArray solver.parseBoard(solver.getBoardString board))
+            .toEqual board
 
 describe "Getting the board colors", ->
     board = new Uint8Array [
@@ -120,11 +122,11 @@ describe "Playing a color on the board", ->
             9455
             9999
         """
-        expect(solver.playColor boardA, 9).toEqual boardB
+        expect(_.toArray solver.playColor boardA, 9).toEqual _.toArray boardB
     it "should not mutate the passed in board", ->
         board = solver.getRandomBoard(); original = new Uint8Array(board)
         solver.playColor board, 9
-        expect(board).toEqual original
+        expect(_.toArray board).toEqual _.toArray original
 
 describe "Finding neighbor boards", ->
     board = solver.getRandomBoard()
@@ -133,7 +135,7 @@ describe "Finding neighbor boards", ->
         expect(neighbors).usIsArray()
         expect(neighbors).usAll (n) -> n instanceof Uint8Array
     it "does not return the passed in board", ->
-        expect(neighbors).usAll (n) -> _.isEqual(n, board)
+        expect(neighbors).usAll (n) -> _.isEqual(_.toArray n, _.toArray board)
     it "changes the top-left color", ->
         expect(neighbors).usAll (n) -> n[0] != board[0]
     it "gives only one result when a color could be completely eliminated", ->
