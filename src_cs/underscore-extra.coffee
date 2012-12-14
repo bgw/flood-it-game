@@ -49,10 +49,14 @@ compactExists = (array) -> _.filter array, ((value)->value?)
 # Calls console.log on the value, but can also be used in a chain like _.tap.
 log = (value) -> _.tap(value, console.log)
 
+# Ensures a <= value <= b, "clamp"ing the value
+clamp = (value, a, b) -> Math.min(Math.max(value, a), b)
+
 _.mixin {
     lruCache: lruCache
     simpleLruCache: simpleLruCache
     compactExists: compactExists
     log: log
+    clamp: clamp
 }
 module.exports = _
