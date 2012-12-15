@@ -52,11 +52,19 @@ log = (value) -> _.tap(value, console.log)
 # Ensures a <= value <= b, "clamp"ing the value
 clamp = (value, a, b) -> Math.min(Math.max(value, a), b)
 
+# Just like Python's `sum` function, takes an array of numbers, or a bunch of
+# numbers as arguments, and then adds them all together, returning the sum.
+sum = (list) ->
+    if _.isNumber list
+        list = arguments
+    return _.reduce list, ((memo, n) -> memo + n), 0
+
 _.mixin {
     lruCache: lruCache
     simpleLruCache: simpleLruCache
     compactExists: compactExists
     log: log
     clamp: clamp
+    sum: sum
 }
 module.exports = _

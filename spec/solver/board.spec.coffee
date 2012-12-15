@@ -7,6 +7,10 @@ describe "Board size", ->
     it "gives the width or height of a square board.", ->
         expect(boardUtil.getSize(new BoardData 100)).toBe 10
 
+# We'll assume the getPosition family of functions is okay: They're extensively
+# implicitly tested via their dependent functions' tests. Besides, they're
+# horribly simple functions.
+
 describe "Board hashing", ->
     it "should be unique for every possible input board.", ->
         boardList = []
@@ -65,6 +69,7 @@ describe "Getting the board colors", ->
 describe "Generating a random board", ->
     it "gives a board containing all the specified colors", ->
         expect(boardUtil.getColors(boardUtil.getRandom 5, 25).length).toBe 25
+        expect(boardUtil.getColors(boardUtil.getRandom 5, 10).length).toBe 10
     it "checks that there are enough spaces for all the colors", ->
         expect(-> boardUtil.getRandom 5, 26).toThrow()
     it "gives the right-sized board", ->
@@ -72,6 +77,9 @@ describe "Generating a random board", ->
         expect(boardUtil.getSize boardUtil.getRandom 10).toBe 10
     it "is a typed array", ->
         expect(boardUtil.getRandom() instanceof BoardData).toBe true
+    it "is efficient with tight color constraints", ->
+        # Performance should remain O(n)
+        expect(boardUtil.getRandom(100, 100*100).length).toBe 100*100
 
 describe "Getting adjacent positions", ->
     board = boardUtil.getRandom 10
@@ -212,8 +220,111 @@ describe "Perimeter blocks", ->
         expect(Array::sort.call boardUtil.getPerimeterBlocks board, p(1, 1))
             .toEqual Array::sort.call perimeter
 
+# Generates a board like
+#     00000
+#     01110
+#     01110
+#     01110
+#     00000
+# with a given size.
+insetSquareBoard = (bs) ->
+    b = new BoardData bs*bs
+    for value, position in b
+        [x, y] = boardUtil.getPositionPair b, position
+        b[position] = Number(_.intersection([x, y], [0, bs-1]).length is 0)
+    return b
+
 describe "Perimeter length", ->
     it "equals zero when the board is filled", ->
         # It must be zero because perimeter blocks cannot be off the board
         for i in [1..20]
             expect(boardUtil.getPerimeter new BoardData i*i).toBe 0
+    it "equals 4*(n-2) for an nxn board with a 1-position inset n-1 square", ->
+        for bs in [3..20]
+            b = insetSquareBoard bs
+            expect(boardUtil.getPerimeter b, boardUtil.getPosition(b, 1, 1))
+                .toBe 4*(bs-2)
+    it "is correct for an arbitrary board with gaps", ->
+        board = boardUtil.parse """
+            212221
+            222321
+            002220
+            000111
+            111111
+            222222
+        """
+        expect(boardUtil.getPerimeter board).toBe 10
+
+describe "Perimeter colors", ->
+    it "is an empty list when there is no perimeter", ->
+        expect(boardUtil.getPerimeterColors new BoardData 25).toEqual []
+    it "is an Array type", ->
+        expect(boardUtil.getPerimeterColors insetSquareBoard 5).usIsArray()
+    it "are correct when there are multiple colors", ->
+        board = boardUtil.parse """
+            212221
+            222321
+            002220
+            000111
+            111111
+            222222
+        """
+        expect(Array::sort.call boardUtil.getPerimeterColors board)
+            .toEqual [0, 1, 3]
+
+describe "Blob is whole", ->
+    board = boardUtil.parse """
+        012
+        122
+        222
+    """
+    it "for any one-position blob", ->
+        expect(boardUtil.blobIsWhole board).toBeTruthy()
+    it "is valid for a multi-position blob", ->
+        expect(boardUtil.blobIsWhole board, 2).toBeTruthy()
+    it "gives a false value when the blob is not whole", ->
+        expect(boardUtil.blobIsWhole board, 1).toBeFalsy()
+
+describe "Blob counts", ->
+    it "has a number of keys equal to the number of blobs", ->
+        for i in [1..25]
+            b = boardUtil.getRandom 5, i
+            expect(_.keys(boardUtil.getBlobCounts b).length).toBe i
+    it "has the proper number of keys when the color range has gaps", ->
+        board = boardUtil.parse """
+            343
+            334
+            979
+        """
+        expect(_.keys(boardUtil.getBlobCounts board).length).toBe 4
+    it "will total the number of blobs when summed", ->
+        for i in [1..25]
+            b = boardUtil.getRandom 5, i
+            expect(_.sum _.values boardUtil.getBlobCounts b)
+                .toBe boardUtil.getNetBlobCount b
+
+describe "Color segmentation", ->
+    # In this function we describe racism.
+    board = boardUtil.parse """
+        0112
+        2221
+        1111
+        3443
+    """
+    it "exists when each passed color in an arbitary board is split", ->
+        expect(boardUtil.areColorsSegmented board, [1, 2, 3]).toBeTruthy()
+    it "does not exist when none of the colors are split", ->
+        expect(boardUtil.areColorsSegmented board, [0, 4]).toBeFalsy()
+
+describe "A blobified board", ->
+    it "has as many colors as there are blobs", ->
+        board = boardUtil.getRandom 5, 10
+        expect(boardUtil.getColors(boardUtil.getBlobifiedBoard board).length)
+            .toBe boardUtil.getNetBlobCount board
+
+describe "Net blob count", ->
+    it "gives the number of colors when no color is segmented", ->
+        board = boardUtil.getRandom 5, 5*5
+        expect(boardUtil.getNetBlobCount board).toBe 25
+    it "is one when there is an empty board", ->
+        expect(boardUtil.getNetBlobCount new BoardData 25).toBe 1

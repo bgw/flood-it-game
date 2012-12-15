@@ -174,7 +174,7 @@ solver.solveBoard = (startBoard=@boardUtil.getRandom(), {admissible, multiplier,
         # blob, after our next move, we won't have decreased the number of
         # colors in play, so we can say that we need at least one additional
         # move after that to start clearing off colors completely.
-        isSegmented = @boardUtil.allBlobsSegmented board,
+        isSegmented = @boardUtil.areColorsSegmented board,
                                             @boardUtil.getPerimeterColors(board)
         # Our mesh is handy, let's find the positions for which we have data
         localHardPositions = _.intersection(hardPositions,

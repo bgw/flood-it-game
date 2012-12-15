@@ -1,6 +1,15 @@
 # Various utility functions for dealing with a board. These are all very tiny
 # functions without side effects (beyond caching) which are handy in the solver,
 # but aren't directly related to the problem of solving the board.
+#
+# Our board type (defined as `boardUtil.type` at the end of this module) is
+# essentially just a 1D uint typed array in row-major order. The top-left corner
+# is conveniently 0 (especially useful since flood-it games usually work from
+# the top-left corner). The bottom-right corner will then be `board.length - 1`.
+# To illustrate this, on a 3x3 board, the indexes will be:
+#     012
+#     345
+#     678
 
 _ = require "../underscore-extra.coffee"
 module.exports = boardUtil = {}
@@ -12,6 +21,18 @@ boardUtil.getSize = (b) -> Math.sqrt b.length
 # Converts an x, y pair into a position value, where x an y are offsets from the
 # top-left corner. They are converted with the formula: x + y * boardSize
 boardUtil.getPosition = (b, x, y) -> x + y * @getSize b
+
+# Extracts the x coordinate from a position value, where x is the offset from
+# the left edge.
+boardUtil.getPositionX = (b, p) -> p % @getSize b
+
+# Extracts the y coordinate from a position value, where y is the offset from
+# the top edge.
+boardUtil.getPositionY = (b, p) -> Math.floor p / @getSize b
+
+# Extracts the [x, y] coordinate pair from a position value, where x and y are
+# the offsets from the top-left corner
+boardUtil.getPositionPair = (b, p) -> [@getPositionX(b, p), @getPositionY(b, p)]
 
 # Used wherever we need to put a board into a dictionary (object), as object
 # keys must be strings. Not designed to be human readable, just computer-usable.
@@ -42,7 +63,7 @@ boardUtil.getColors = _.simpleLruCache _.uniq
 boardUtil.getRandom = (size=14, colorCount=6) ->
     if size*size < colorCount
         throw {
-            name: "Board too small",
+            name: "Board too small"
             message: "The given size=#{size} is too small to contain all " + \
                      "the colors desired."
         }
@@ -53,7 +74,7 @@ boardUtil.getRandom = (size=14, colorCount=6) ->
     # We then shuffle the result, so we don't have an ordered list at the
     # beginning.
     return new @type _.shuffle _.range(colorCount).concat(
-        _.random(0, colorCount) for i in [0...size*size - colorCount]
+        _.random(0, colorCount-1) for i in [0...size*size - colorCount]
     )
 
 # Gets the positions on the board next to a given position. Is called
@@ -122,8 +143,8 @@ boardUtil.getBlobSize = _.lruCache(((board, position=0) ->
 # `sqrt(deltaX^2 + deltaY^2)`.
 boardUtil.getDistance = (board, positionA, positionB) ->
     bs = @getSize board
-    [aX, bX] = [positionA % bs, positionB % bs]
-    [aY, bY] = [Math.floor(positionA / bs), Math.floor(positionB / bs)]
+    [aX, aY] = @getPositionPair board, positionA
+    [bX, bY] = @getPositionPair board, positionB
     return Math.abs(aX-bX) + Math.abs(aY-bY)
 
 # Returns the minimum manhattan distance between two blobs specified by
@@ -192,7 +213,7 @@ boardUtil.getBlobCounts = (board) ->
 
 # Returns if all given colors are contained in multiple blobs (are segmented).
 # If no colors are given, it assumes all colors currently on the board instead.
-boardUtil.allBlobsSegmented = (board, colors=@getColors(board)) ->
+boardUtil.areColorsSegmented = (board, colors=@getColors(board)) ->
     return _.chain(@getBlobCounts board)
         # We only care about the colors we were passed
         .pick(colors...)
@@ -201,9 +222,10 @@ boardUtil.allBlobsSegmented = (board, colors=@getColors(board)) ->
         .all((count) -> count > 1)
         .value()
 
-# Returns a board with one color for each blob, meaning that all positions of
-# the same color value will be in the same blob.
-boardUtil.getBlobifiedBoard = (board) ->
+# Combines implementation code for `getBlobifiedBoard` and `getNetBlobCount`, as
+# their computation is the same, only with (potentially expensive to transform)
+# different return values.
+blobifyingBase = (mode, board) ->
     blobs = new Uint16Array board.length
     blobNumber = 1
     for position in [0...board.length]
@@ -211,7 +233,26 @@ boardUtil.getBlobifiedBoard = (board) ->
             for subPosition in @getBlobPositions board, position
                 blobs[subPosition] = blobNumber
             blobNumber++
-    return blobs
+    if mode == blobifyingBase.GET_BLOBIFIED_BOARD
+        return blobs
+    else if mode == blobifyingBase.GET_NET_BLOB_COUNT
+        return blobNumber - 1
+    throw {
+        name: "Unknown mode"
+        message: "Should be a member of blobifyingBase"
+    }
+blobifyingBase = _.bind blobifyingBase, boardUtil
+blobifyingBase.GET_BLOBIFIED_BOARD = 1
+blobifyingBase.GET_NET_BLOB_COUNT = 2
+
+# Returns a board with one color for each blob, meaning that all positions of
+# the same color value will be in the same blob.
+boardUtil.getBlobifiedBoard = \
+    _.bind blobifyingBase, @, blobifyingBase.GET_BLOBIFIED_BOARD
+
+# Returns the total number of colors on the board
+boardUtil.getNetBlobCount = \
+    _.bind blobifyingBase, @, blobifyingBase.GET_NET_BLOB_COUNT
 
 # Ensure `this` or `@` acts like we expect it to (pointing to boardUtil)
 _.bindAll boardUtil
