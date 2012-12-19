@@ -234,6 +234,15 @@ insetSquareBoard = (bs) ->
         b[position] = Number(_.intersection([x, y], [0, bs-1]).length is 0)
     return b
 
+describe "Perimeter blobs", ->
+    it "contains only one element when there is only one surrounding blob", ->
+        expect(boardUtil.getPerimeterBlobs(insetSquareBoard(3), 4).length)
+            .toBe 1
+    it "contains four elements when every position on is a different color", ->
+        expect(
+            boardUtil.getPerimeterBlobs(boardUtil.getRandom(5, 25), 7).length)
+                .toBe 4
+
 describe "Perimeter length", ->
     it "equals zero when the board is filled", ->
         # It must be zero because perimeter blocks cannot be off the board

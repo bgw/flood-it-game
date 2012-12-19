@@ -175,6 +175,17 @@ boardUtil.getPerimeterBlocks = _.simpleLruCache (board, position=0) ->
         .reject((adjacent) => board[adjacent] == board[position])
     return perimeterBlocks
 
+# Returns a subset of the perimeter with only one position per blob.
+boardUtil.getPerimeterBlobs = _.simpleLruCache (board, position=0) ->
+    claimedPositions = new @type board.length
+    perimeterBlobs = []
+    for perimeterPosition in @getPerimeterBlocks board, position
+        if claimedPositions[perimeterPosition] then continue
+        perimeterBlobs.push perimeterPosition
+        for blobPosition in @getBlobPositions board, perimeterPosition
+            claimedPositions[blobPosition] = true
+    return perimeterBlobs
+
 # Returns the number of blocks outside of the blob directly touching the blob.
 # Typically the larger the perimeter, the more blocks we can collect on our next
 # turn.
@@ -250,7 +261,7 @@ blobifyingBase.GET_NET_BLOB_COUNT = 2
 boardUtil.getBlobifiedBoard = \
     _.bind blobifyingBase, @, blobifyingBase.GET_BLOBIFIED_BOARD
 
-# Returns the total number of colors on the board
+# Returns the total number of blobs on the board
 boardUtil.getNetBlobCount = \
     _.bind blobifyingBase, @, blobifyingBase.GET_NET_BLOB_COUNT
 
