@@ -70,6 +70,8 @@ solver.getPositionMesh = (startBoard=@boardUtil.getRandom(),
         if colorDifference is 0
             # Give the cost of one move
             return 1
+        # You can't remove more than one color or a negative amount of colors
+        _.assert false
 
     mesh = @getNavigationMesh blobs[finalPosition], getNeighbors, distance
     return (position) ->

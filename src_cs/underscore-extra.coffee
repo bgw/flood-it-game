@@ -59,6 +59,25 @@ sum = (list) ->
         list = arguments
     return _.reduce list, ((memo, n) -> memo + n), 0
 
+isDebug = true
+
+# Doesn't get compiled away, although it could be with an agressive enough
+# minimizer. Will take a boolean value or a function. When passed a function, it
+# will evaluate the return value of it. This is useful for expensive assertion
+# operations that you don't want to be run when not in debug mode, or for giving
+# context to and improving readability of larger assertion calculations.
+assert = (value) ->
+    if not isDebug then return
+    if _.isFunction(value) then value = value()
+    if not value
+        throw {
+            name: "Failed assertion"
+        }
+
+# Can disable or enable assertions. If passed a function, the assertion won't
+# even be evaluated.
+setDebug = (isEnabled) -> isDebug = isEnabled
+
 _.mixin {
     lruCache: lruCache
     simpleLruCache: simpleLruCache
@@ -66,5 +85,7 @@ _.mixin {
     log: log
     clamp: clamp
     sum: sum
+    assert: assert
+    setDebug: setDebug
 }
 module.exports = _
