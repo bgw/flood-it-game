@@ -56,7 +56,7 @@ clamp = (value, a, b) -> Math.min(Math.max(value, a), b)
 # numbers as arguments, and then adds them all together, returning the sum.
 sum = (list) ->
     if _.isNumber list
-        list = arguments
+        list = _.toArray arguments
     return _.reduce list, ((memo, n) -> memo + n), 0
 
 isDebug = true
