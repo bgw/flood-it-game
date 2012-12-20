@@ -59,7 +59,19 @@ solver.getPositionMesh = (startBoard=@boardUtil.getRandom(),
                                                      blobPositions[blob])
             .map((p) => blobs[p]).uniq().value()
 
-    mesh = @getNavigationMesh blobs[finalPosition], getNeighbors
+    # Returns the cost associated with making a move
+    distance = (from, to) =>
+        colorDifference = @boardUtil.getColors(to).length - \
+                          @boardUtil.getColors(from).length
+        if colorDifference is 1
+            # We removed a color, which we'd have to do anyways. Therefore the
+            # delta cost is 0
+            return 0
+        if colorDifference is 0
+            # Give the cost of one move
+            return 1
+
+    mesh = @getNavigationMesh blobs[finalPosition], getNeighbors, distance
     return (position) ->
         return (blobPositions[i] for i in mesh(blobs[position]))
 
